@@ -12,9 +12,9 @@ public class Main {
             int secondNumber = number2;
             int sum=firstNumber+secondNumber;
             double quotient = (double) firstNumber / secondNumber;
-            System.out.println(sum);
-            System.out.println(firstNumber-secondNumber);
-            System.out.println(firstNumber*secondNumber);
-            System.out.println(quotient);
+            System.out.println("Сумма:"+sum);
+            System.out.println("Разность:"+(firstNumber-secondNumber));
+            System.out.println("Произведение:"+(firstNumber*secondNumber));
+            System.out.println("Частное:"+quotient);
         }
     }
