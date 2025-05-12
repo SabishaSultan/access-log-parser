@@ -11,20 +11,21 @@ public class Main {
     public static void cycles() {
         int count = 0;
         while (true) {
-            System.out.print("Введите путь к файлу: ");
+            System.out.println("Введите путь к файлу: ");
             String path = new Scanner(System.in).nextLine();//запросить путь к консоли
-            count++;
+            System.out.println("Путь к папке " + path);
             File file = new File(path);
             boolean fileExists = file.exists(); //существует ли файл, путь к котрому был указан
             boolean isDirectory = file.isDirectory(); //является ли указанный путь путём именно к файлу, а не к папке.
-            if (!fileExists || !isDirectory) {
-                System.out.println("Указанный файл не существует или это путь к папке.");
+            System.out.println("Указывает введенный путь к директории " + isDirectory);
+            if (!fileExists || isDirectory) {
+                System.out.println("Указанный файл не существует или это путь к папке." + path);
                 continue; // Продолжаем цикл, если файл не существует или это папка
             } else {
                 System.out.println("Путь указан верно.");
-                break;
+                count++;
+                System.out.println("Количество успешных запросов= " + count);
             }
         }
-        System.out.println("Это файл номер " + count);
     }
 }
