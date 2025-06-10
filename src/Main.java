@@ -83,12 +83,13 @@ public class Main {
             return new int[]{googlebotCount, yandexbotCount}; // Если строка не содержит достаточного количества данных, возвращаем нули
         }
 
-        String ipAddress = parts[0]; // IP-адрес клиента
-        String dateTime = parts[3] + " " + parts[4]; // Дата и время запроса
-        String requestMethod = parts[5].substring(1); // Метод запроса (GET, POST и т.д.)
-        String requestPath = parts[6]; // Путь запроса
-        String httpResponseCode = parts[8]; // Код HTTP-ответа
-        String dataSize = parts[9]; // Размер отданных данных в байтах
+        String ipAddr = parts[0]; // IP-адрес клиента
+        String time = parts[3] + " " + parts[4]; // Дата и время запроса
+        String method = parts[5].substring(1); // Метод запроса (GET, POST и т.д.)
+        String path = parts[6]; // Путь запроса
+        String responseCode = parts[8]; // Код HTTP-ответа
+        String responseSize = parts[9]; // Размер отданных данных в байтах
+        String referer = parts [10];
         String userAgent = parts[11]; // User-Agent
 
         // Поиск User-Agent в скобках
