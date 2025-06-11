@@ -51,6 +51,15 @@ public class Main {
                     }
                     totalRequests++; // Увеличиваем общее количество запросов
                     parseLogLine(line, totalRequests);
+
+                    // Проверяем, является ли запрос от бота
+                    if (isBotRequest(line)) {
+                        if (line.contains("Googlebot")) {
+                            googlebotRequests++;
+                        } else if (line.contains("YandexBot")) {
+                            yandexbotRequests++;
+                        }
+                    }
                 }
 
                 // Выводим долю запросов от ботов
@@ -71,6 +80,11 @@ public class Main {
                 return; // Завершаем выполнение программы
             }
         }
+
+    }
+    private static boolean isBotRequest(String line) {
+        // Проверяем, содержит ли строка идентификаторы ботов
+        return line.contains("Googlebot") || line.contains("YandexBot");
     }
 
     private static int[] parseLogLine(String line, int totalRequests) {
