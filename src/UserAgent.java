@@ -1,10 +1,12 @@
 public class UserAgent {
     private final String operatingSystem;
     private final String browser;
+    private final boolean isBot; // Новое поле для определения, является ли это ботом
 
     public UserAgent(String userAgentString) {
         this.operatingSystem = extractOperatingSystem(userAgentString);
         this.browser = extractBrowser(userAgentString);
+        this.isBot = checkIfBot(userAgentString); // Определяем, является ли это ботом
     }
 
     private String extractOperatingSystem(String userAgentString) {
@@ -30,12 +32,17 @@ public class UserAgent {
         }
         return "Other";
     }
-
+    private boolean checkIfBot(String userAgentString) {
+        return userAgentString.toLowerCase().contains("bot"); // Проверяем наличие слова "bot"
+    }
     public String getOperatingSystem() {
         return operatingSystem;
     }
 
     public String getBrowser() {
         return browser;
+    }
+    public boolean isBot() {
+        return isBot; // Метод для получения информации о том, является ли это ботом
     }
 }
