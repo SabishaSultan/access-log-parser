@@ -2,10 +2,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
 public class Statistics {
-    private long totalTraffic;
+    long totalTraffic;
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
     private HashSet<String> listPages; // Хранит список всех существующих страниц сайта
@@ -13,11 +14,15 @@ public class Statistics {
     private HashMap<String, Integer> osStatistics; // Хранит статистику операционных систем пользователей сайта
     private HashMap<String, Integer> browserStatistics; // Хранит статистику браузеров пользователей сайта
 
-    // Новые поля для подсчета
     private int totalVisits; // Общее количество посещений
     private int errorRequests; // Количество ошибочных запросов
     private HashSet<String> uniqueUsers; // Уникальные IP-адреса реальных пользователей
     private int totalHours; // Общее количество часов, за которые имеются записи
+
+    private Map<Integer, Integer> visitsPerSecond; // Количество посещений в секунду
+    private Map<String, Integer> userVisits; // Количество посещений для каждого пользователя (по IP)
+    private Set<String> referrerDomains; // Список доменов рефереров
+    private final String botIdentifier = "bot"; // Идентификатор бота в User-Agent
 
 
     public Statistics() {
@@ -30,10 +35,14 @@ public class Statistics {
         this.browserStatistics = new HashMap<>(); // Инициализируем HashMap для браузеров
         this.totalHours = 0; // Изначально ноль, будет обновляться при добавлении записей
 
-        // Инициализация новых полей
+
         this.totalVisits = 0;
         this.errorRequests = 0;
         this.uniqueUsers = new HashSet<>();
+
+        this.visitsPerSecond = new HashMap<>();
+        this.userVisits = new HashMap<>();
+        this.referrerDomains = new HashSet<>();
 
     }
 
@@ -41,14 +50,57 @@ public class Statistics {
         totalTraffic += bytes;
     }
 
-    public void addVisit(String userAgent, String ip) {
-        totalVisits++;
+    // Метод для добавления посещения
+    public void addVisit(String userAgent, String ipAddr, String referrer, int time) {
+        if (!isBot(userAgent)) {
+            // Увеличиваем количество посещений за эту секунду
+            visitsPerSecond.put(time, visitsPerSecond.getOrDefault(time, 0) + 1);
 
-        // Проверяем, является ли запрос от бота
-        if (!userAgent.toLowerCase().contains("bot")) {
-            uniqueUsers.add(ip); // Добавляем уникальный IP, если это не бот
+            // Увеличиваем количество посещений для данного пользователя
+            userVisits.put(ipAddr, userVisits.getOrDefault(ipAddr, 0) + 1);
+
+            // Добавляем домен реферера
+            if (referrer != null) {
+                String domain = extractDomain(referrer);
+                referrerDomains.add(domain);
+            }
         }
     }
+
+    // Метод для извлечения домена из URL
+    private String extractDomain(String url) {
+        try {
+            String domain = url.split("/")[2]; // Извлекаем домен из URL
+            return domain.startsWith("www.") ? domain.substring(4) : domain; // Убираем www.
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return ""; // Если не удалось извлечь домен, возвращаем пустую строку
+        }
+    }
+
+    // Метод для расчета пиковой посещаемости сайта в секунду
+    public int getPeakVisitsPerSecond() {
+        return visitsPerSecond.values().stream()
+                .max(Integer::compare)
+                .orElse(0);
+    }
+
+    // Метод для получения списка доменов рефереров
+    public Set<String> getReferrerDomains() {
+        return referrerDomains;
+    }
+
+    // Метод для расчета максимальной посещаемости одним пользователем
+    public int getMaxVisitsByUser() {
+        return userVisits.values().stream()
+                .max(Integer::compare)
+                .orElse(0);
+    }
+
+    // Метод для проверки, является ли пользователь ботом
+    private boolean isBot(String userAgent) {
+        return userAgent != null && userAgent.toLowerCase().contains(botIdentifier);
+    }
+
 
     public void addErrorRequest() {
         errorRequests++;
@@ -86,11 +138,11 @@ public class Statistics {
         }
 
         // Обрабатываем операционную систему
-        String os = logEntry.getUserAgent().getOperatingSystem();
-        osStatistics.put(os, osStatistics.getOrDefault(os, 0) + 1);
+      //  String os = logEntry.getUserAgent().getOperatingSystem();
+       // osStatistics.put(os, osStatistics.getOrDefault(os, 0) + 1);
         // Обрабатываем браузер
-        String browser = logEntry.getUserAgent().getBrowser();
-        browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
+       // String browser = logEntry.getUserAgent().getBrowser();
+      //  browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
     }
 
     public double getTrafficRate() {

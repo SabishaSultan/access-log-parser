@@ -1,32 +1,47 @@
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogEntry {
     private final String ipAddr;
     private final LocalDateTime time;
     private final HttpMethod method;
-    private final String path;
+    private final String paths;
     private final int responseCode;
-    private final int responseSize;
+    private final Long responseSize;
     private final String referer;
     private final UserAgent agent;
 
-    public LogEntry(String logLine) {
-        String[] parts = logLine.split(" "); // Разделяем строку на части
-
-        if (parts.length < 11) {
-            throw new IllegalArgumentException("Недостаточно данных в строке лога: " + logLine);
+    public LogEntry(String line) {
+        Pattern pattern = Pattern.compile(
+                "^(\\S+) "                             // IP-address
+                + "- - "                       // Fixed dashes
+                + "\\[([\\w:/]+\\s[+\\-]\\d{4})\\] "  // Date and time - corrected
+                + "\"([A-Z]+) ([^ ]*) HTTP/[^\"]*\" "  // Method and path
+                + "(\\d{3}) "                  // Response code
+                + "(\\d+) "                    // Size of data
+                + "\"([^\"]*)\" "             // Referrer
+                + "\"([^\"]*)\""              // User-Agent
+        );
+        String lines = Arrays.toString(line.split("\n"));
+        Matcher matcher = pattern.matcher(lines.trim());
+        if (!matcher.find()) {
+            System.err.println("Error parsing log line: " + line);
+            throw new IllegalArgumentException("Invalid log format for line: " + line);
         }
+        this.ipAddr = matcher.group(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.ENGLISH);;
+        this.time = LocalDateTime.parse(matcher.group(2), formatter);
+        this.method = HttpMethod.valueOf(matcher.group(3));
+        this.paths = matcher.group(4);
+        this.responseCode = Integer.parseInt(matcher.group(5));
+        this.responseSize = Long.parseLong(matcher.group(6));
+        this.referer = matcher.group(7);
+        this.agent = new UserAgent(matcher.group(8));
 
-        this.ipAddr = parts[0];
-        this.time = LocalDateTime.parse(parts[3].substring(1) + " " + parts[4].substring(0, parts[4].length() - 1),
-                DateTimeFormatter.ofPattern("dd/MMM/yyyy HH:mm:ss"));
-        this.method = HttpMethod.valueOf(parts[5]); // Убираем начальный символ
-        this.path = parts[6];
-        this.responseCode = Integer.parseInt(parts[8]);
-        this.responseSize = Integer.parseInt(parts[9]);
-        this.referer = parts.length > 10 ? parts[10] : ""; // Если referer отсутствует
-        this.agent = new UserAgent(parts.length > 11 ? parts[11] : ""); // Проверим длину массива
     }
 
     public String getIpAddr() {
@@ -42,7 +57,7 @@ public class LogEntry {
     }
 
     public String getPath() {
-        return path;
+        return paths;
     }
 
     public int getResponseCode() {
@@ -50,7 +65,7 @@ public class LogEntry {
     }
 
     public int getDataSize() {
-        return responseSize;
+        return Math.toIntExact(responseSize);
     }
 
     public String getReferer() {

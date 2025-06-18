@@ -3,10 +3,12 @@ public class UserAgent {
     private final String browser;
     private final boolean isBot; // Новое поле для определения, является ли это ботом
 
+
     public UserAgent(String userAgentString) {
         this.operatingSystem = extractOperatingSystem(userAgentString);
         this.browser = extractBrowser(userAgentString);
         this.isBot = checkIfBot(userAgentString); // Определяем, является ли это ботом
+
     }
 
     private String extractOperatingSystem(String userAgentString) {
