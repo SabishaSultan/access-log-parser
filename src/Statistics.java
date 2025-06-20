@@ -141,12 +141,6 @@ public class Statistics {
         // Обрабатываем операционную систему
        String os = logEntry.getUserAgent().getOperatingSystem();
         osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
-        if (os.contains("Mac OS") || os.contains("Mac OS X")) {
-            osFrequency.put("MacOS", osFrequency.getOrDefault("MacOS", 0) + 1);
-        } else {
-            // Подсчитываем частоту встречаемости других операционных систем
-            osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
-        }
 
          //Обрабатываем браузер
         String browser = logEntry.getUserAgent().getBrowser();
@@ -165,11 +159,6 @@ public class Statistics {
     public HashMap<String, Double> getOSDistribution() {
         HashMap<String, Double> osDistribution = new HashMap<>();
         int totalOSCount = osFrequency.values().stream().mapToInt(Integer::intValue).sum(); // Суммируем все значения
-
-        // Проверяем, есть ли Mac OS
-        if (!osFrequency.containsKey("MacOS")) {
-            osFrequency.put("MacOS", 0); // Устанавливаем значение по умолчанию
-        }
 
         for (String os : osFrequency.keySet()) {
             double proportion = (double) osFrequency.get(os) / totalOSCount; // Рассчитываем долю

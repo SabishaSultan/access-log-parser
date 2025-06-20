@@ -14,8 +14,9 @@ public class UserAgent {
     private String extractOperatingSystem(String userAgentString) {
         if (userAgentString.contains("Windows")) {
             return "Windows";
-        } else if (userAgentString.contains("macOS")) {
-            return "macOS";
+        } else if (userAgentString.contains("Macintosh") || (userAgentString.contains("Intel Mac OS X")) ||
+        (userAgentString.contains("iPad"))){
+            return "Mac_OS";
         } else if (userAgentString.contains("Linux")) {
             return "Linux";
         }
