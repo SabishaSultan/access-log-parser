@@ -79,10 +79,17 @@ public class Main {
                 System.out.println("Traffic Rate: " + statistics.getTrafficRate());
 
                 // Получение существующих страниц
-                System.out.println("Существующие страницы: " + statistics.getListPages());
+                // System.out.println("Существующие страницы: " + statistics.getListPages());
+
+                // Получение несуществующих страниц
+                System.out.println("Несуществующие страницы: " + statistics.getNonListPages());
 
                 // Получение статистики операционных систем
                 System.out.println("Статистика ОС: " + statistics.getOSDistribution());
+
+                // Получение статистики браузеров
+                System.out.println("Статистика браузеров: " + statistics.getBrowserDistribution());
+
 
                 // Проверяем пик посещаемости
                 // int visitsPerSecond = statistics.getPeakVisitsPerSecond();

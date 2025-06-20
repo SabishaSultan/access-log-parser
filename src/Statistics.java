@@ -9,9 +9,9 @@ public class Statistics {
     long totalTraffic;
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
-    private HashMap<String, Integer> osFrequency; // Хранит частоту встречаемости ОС
     private HashSet<String> listPages; // Хранит список всех существующих страниц сайта
     private HashSet<String> nonListPages; // Хранит список несуществующих страниц (404)
+    private HashMap<String, Integer> osFrequency; // Хранит частоту встречаемости ОС
     private HashMap<String, Integer> browserStatistics; // Хранит статистику браузеров пользователей сайта
 
     private int totalVisits; // Общее количество посещений
@@ -125,6 +125,7 @@ public class Statistics {
             maxTime = logEntry.getDateTime();
         }
         UserAgent userAgent = logEntry.getUserAgent(); // Получаем объект UserAgent
+
         // Проверяем код ответа и добавляем страницу
         if (logEntry.getResponseCode() == 200) {
             totalVisits++; // Увеличиваем общее количество посещений
@@ -140,10 +141,6 @@ public class Statistics {
         // Обрабатываем операционную систему
        String os = logEntry.getUserAgent().getOperatingSystem();
         osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
-
-         //Обрабатываем браузер
-        String browser = logEntry.getUserAgent().getBrowser();
-        browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
         if (os.contains("Mac OS") || os.contains("Mac OS X")) {
             osFrequency.put("MacOS", osFrequency.getOrDefault("MacOS", 0) + 1);
         } else {
@@ -151,6 +148,9 @@ public class Statistics {
             osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
         }
 
+         //Обрабатываем браузер
+        String browser = logEntry.getUserAgent().getBrowser();
+        browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
     }
 
     public double getTrafficRate() {

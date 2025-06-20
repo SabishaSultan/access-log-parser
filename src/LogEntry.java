@@ -15,6 +15,7 @@ public class LogEntry {
     private final String referer;
     private final UserAgent agent;
 
+
     public LogEntry(String line) {
         Pattern pattern = Pattern.compile(
                 "^(\\S+) "                             // IP-address
@@ -41,6 +42,7 @@ public class LogEntry {
         this.responseSize = Long.parseLong(matcher.group(6));
         this.referer = matcher.group(7);
         this.agent = new UserAgent(matcher.group(8));
+
 
     }
 
