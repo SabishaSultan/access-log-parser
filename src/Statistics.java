@@ -9,9 +9,9 @@ public class Statistics {
     long totalTraffic;
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
+    private HashMap<String, Integer> osFrequency; // Хранит частоту встречаемости ОС
     private HashSet<String> listPages; // Хранит список всех существующих страниц сайта
     private HashSet<String> nonListPages; // Хранит список несуществующих страниц (404)
-    private HashMap<String, Integer> osStatistics; // Хранит статистику операционных систем пользователей сайта
     private HashMap<String, Integer> browserStatistics; // Хранит статистику браузеров пользователей сайта
 
     private int totalVisits; // Общее количество посещений
@@ -31,7 +31,7 @@ public class Statistics {
         this.maxTime = LocalDateTime.MIN; // Инициализируем минимальным значением
         this.listPages = new HashSet<>(); // Инициализируем HashSet
         this.nonListPages = new HashSet<>(); // Инициализируем HashSet для несуществующих страниц
-        this.osStatistics = new HashMap<>(); // Инициализируем HashMap
+        this.osFrequency = new HashMap<>(); // Инициализируем HashMap
         this.browserStatistics = new HashMap<>(); // Инициализируем HashMap для браузеров
         this.totalHours = 0; // Изначально ноль, будет обновляться при добавлении записей
 
@@ -107,7 +107,7 @@ public class Statistics {
     }
 
     public void addOS(String os) {
-        osStatistics.put(os, osStatistics.getOrDefault(os, 0) + 1);
+        osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
     }
 
     public void incrementHours() {
@@ -128,21 +128,29 @@ public class Statistics {
         // Проверяем код ответа и добавляем страницу
         if (logEntry.getResponseCode() == 200) {
             totalVisits++; // Увеличиваем общее количество посещений
-            listPages.add(logEntry.getIpAddr());
+            listPages.add(logEntry.getPath());
             if (!userAgent.isBot()) { // Проверяем, не является ли это ботом
-                uniqueUsers.add(logEntry.getIpAddr()); // Добавляем уникальный IP-адрес реального пользователя
+                uniqueUsers.add(logEntry.getPath()); // Добавляем URL реального пользователя
             }
         } else if (logEntry.getResponseCode() == 404 || logEntry.getResponseCode() >= 400) {
-            nonListPages.add(logEntry.getIpAddr()); // Добавляем URL несуществующей страницы
+            nonListPages.add(logEntry.getPath()); // Добавляем URL несуществующей страницы
             errorRequests++; // Увеличиваем количество ошибочных запросов
         }
 
         // Обрабатываем операционную систему
-      //  String os = logEntry.getUserAgent().getOperatingSystem();
-       // osStatistics.put(os, osStatistics.getOrDefault(os, 0) + 1);
-        // Обрабатываем браузер
-       // String browser = logEntry.getUserAgent().getBrowser();
-      //  browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
+       String os = logEntry.getUserAgent().getOperatingSystem();
+        osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
+
+         //Обрабатываем браузер
+        String browser = logEntry.getUserAgent().getBrowser();
+        browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
+        if (os.contains("Mac OS") || os.contains("Mac OS X")) {
+            osFrequency.put("MacOS", osFrequency.getOrDefault("MacOS", 0) + 1);
+        } else {
+            // Подсчитываем частоту встречаемости других операционных систем
+            osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
+        }
+
     }
 
     public double getTrafficRate() {
@@ -154,6 +162,23 @@ public class Statistics {
 
         return (double) totalTraffic / hoursDifference; // Возвращаем средний трафик
     }
+    public HashMap<String, Double> getOSDistribution() {
+        HashMap<String, Double> osDistribution = new HashMap<>();
+        int totalOSCount = osFrequency.values().stream().mapToInt(Integer::intValue).sum(); // Суммируем все значения
+
+        // Проверяем, есть ли Mac OS
+        if (!osFrequency.containsKey("MacOS")) {
+            osFrequency.put("MacOS", 0); // Устанавливаем значение по умолчанию
+        }
+
+        for (String os : osFrequency.keySet()) {
+            double proportion = (double) osFrequency.get(os) / totalOSCount; // Рассчитываем долю
+            osDistribution.put(os, proportion);
+        }
+
+        return osDistribution;
+    }
+
 
     public double getAverageVisitsPerHour() {
         return totalHours > 0 ? (double) totalVisits / totalHours : 0; // Возвращаем среднее количество посещений за час

@@ -72,9 +72,18 @@ public class Main {
                     LogEntry entry = new LogEntry(line);
                     statistics.addEntry(entry);
 
+
+
                 }
                 System.out.println("Total Traffic: " + statistics.totalTraffic);
                 System.out.println("Traffic Rate: " + statistics.getTrafficRate());
+
+                // Получение существующих страниц
+                System.out.println("Существующие страницы: " + statistics.getListPages());
+
+                // Получение статистики операционных систем
+                System.out.println("Статистика ОС: " + statistics.getOSDistribution());
+
                 // Проверяем пик посещаемости
                 // int visitsPerSecond = statistics.getPeakVisitsPerSecond();
                 //System.out.println("Пиковая посещаемость в секунду: " + visitsPerSecond);
