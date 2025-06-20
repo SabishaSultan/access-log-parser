@@ -90,6 +90,11 @@ public class Main {
                 // Получение статистики браузеров
                 System.out.println("Статистика браузеров: " + statistics.getBrowserDistribution());
 
+                System.out.println("Среднее количество посещений за час: " + statistics.averageVisitsPerHour());
+                System.out.println("Среднее количество ошибочных запросов за час: " + statistics.averageErrorsPerHour());
+                System.out.println("Среднее количество посещений на уникальный IP: " + statistics.averageVisitsPerUniqueUser());
+
+
 
                 // Проверяем пик посещаемости
                 // int visitsPerSecond = statistics.getPeakVisitsPerSecond();

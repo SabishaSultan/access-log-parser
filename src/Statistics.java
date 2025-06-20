@@ -168,18 +168,41 @@ public class Statistics {
         return osDistribution;
     }
 
+    // Возвращаем среднее количество посещений за час
+    public double averageVisitsPerHour() {
+        if (minTime.equals(LocalDateTime.MAX) || maxTime.equals(LocalDateTime.MIN)) {
+            return 0; // Если нет записей, возвращаем 0
+        }
 
-    public double getAverageVisitsPerHour() {
-        return totalHours > 0 ? (double) totalVisits / totalHours : 0; // Возвращаем среднее количество посещений за час
+        long hoursDifference = java.time.Duration.between(minTime, maxTime).toHours();
+        if (hoursDifference == 0) {
+            return totalVisits; // Если разница менее часа, возвращаем общее количество посещений
+        }
+
+        return (double) totalVisits / hoursDifference;
     }
 
-    public double getAverageErrorRequestsPerHour() {
-        return totalHours > 0 ? (double) errorRequests / totalHours : 0; // Возвращаем среднее количество ошибочных запросов за час
+    // Возвращаем среднее количество ошибочных запросов за час
+    public double averageErrorsPerHour() {
+        if (minTime.equals(LocalDateTime.MAX) || maxTime.equals(LocalDateTime.MIN)) {
+            return 0; // Если нет записей, возвращаем 0
+        }
+
+        long hoursDifference = java.time.Duration.between(minTime, maxTime).toHours();
+        if (hoursDifference == 0) {
+            return errorRequests; // Если разница менее часа, возвращаем общее количество ошибочных запросов
+        }
+        return (double) errorRequests / hoursDifference;
     }
 
-    public double getAverageVisitsPerUser() {
-        return uniqueUsers.size() > 0 ? (double) totalVisits / uniqueUsers.size() : 0; // Среднее количество посещений на уникальный IP
-    }
+        // Среднее количество посещений на уникальный IP
+        public double averageVisitsPerUniqueUser() {
+            if (uniqueUsers.isEmpty()) {
+                return 0; // Если нет уникальных пользователей, возвращаем 0
+            }
+
+            return (double) totalVisits / uniqueUsers.size();
+        }
 
     public HashSet<String> getListPages() {
         return listPages; // Возвращаем набор существующих страниц
