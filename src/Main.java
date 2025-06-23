@@ -65,16 +65,13 @@ public class Main {
                     String referer = parts[7];
                     String userAgent = parts[8]; // User-Agent
 
-                    //statistics.incrementHours(); // Увеличиваем количество часов, если есть данные за этот час
-
-                    //statistics.addVisit(userAgent, ipAddr, referer, Integer.parseInt(time));
-
                     LogEntry entry = new LogEntry(line);
                     statistics.addEntry(entry);
 
-
-
+                    // Добавляем записи о посещениях
+                    statistics.addVisit(userAgent, ipAddr, referer, Integer.parseInt(time));
                 }
+
                 System.out.println("Total Traffic: " + statistics.totalTraffic);
                 System.out.println("Traffic Rate: " + statistics.getTrafficRate());
 
@@ -82,35 +79,31 @@ public class Main {
                 // System.out.println("Существующие страницы: " + statistics.getListPages());
 
                 // Получение несуществующих страниц
-                System.out.println("Несуществующие страницы: " + statistics.getNonListPages());
+                //  System.out.println("Несуществующие страницы: " + statistics.getNonListPages());
 
                 // Получение статистики операционных систем
-                System.out.println("Статистика ОС: " + statistics.getOSDistribution());
+                 System.out.println("Статистика ОС: " + statistics.getOSDistribution());
 
                 // Получение статистики браузеров
-                System.out.println("Статистика браузеров: " + statistics.getBrowserDistribution());
+                 System.out.println("Статистика браузеров: " + statistics.getBrowserDistribution());
 
                 System.out.println("Среднее количество посещений за час: " + statistics.averageVisitsPerHour());
                 System.out.println("Среднее количество ошибочных запросов за час: " + statistics.averageErrorsPerHour());
                 System.out.println("Среднее количество посещений на уникальный IP: " + statistics.averageVisitsPerUniqueUser());
 
 
-
                 // Проверяем пик посещаемости
-                // int visitsPerSecond = statistics.getPeakVisitsPerSecond();
-                //System.out.println("Пиковая посещаемость в секунду: " + visitsPerSecond);
+                int visitsPerSecond = statistics.getPeakVisitsPerSecond();
+                System.out.println("Пиковая посещаемость в секунду: " + visitsPerSecond);
 
                 // Проверяем максимальную посещаемость одним пользователем
-               // int userVisits = statistics.getMaxVisitsByUser();
-                //System.out.println("Максимальная посещаемость одним пользователем: " + userVisits);
+                int userVisits = statistics.getMaxVisitsByUser();
+                System.out.println("Максимальная посещаемость одним пользователем: " + userVisits);
 
                 // Получаем список доменов рефереров
-               // Set<String> referrerDomains = statistics.getReferrerDomains();
-               // System.out.println("Сайты, со страниц которых есть ссылки на текущий сайт: " + referrerDomains);
+                Set<String> referrerDomains = statistics.getReferrerDomains();
+                System.out.println("Сайты, со страниц которых есть ссылки на текущий сайт: " + referrerDomains);
 
-                // Проверяем максимальную посещаемость одним пользователем
-                //int maxVisitsByUser = statistics.getMaxVisitsByUser();
-               // System.out.println("Максимальная посещаемость одним пользователем: " + maxVisitsByUser);
 
             } catch (LongLineException ex) {
                 System.err.println("Ошибка: " + ex.getMessage());
@@ -164,14 +157,6 @@ public class Main {
 //      return new int[]{googlebotCount, yandexbotCount}; // Если строка не содержит достаточного количества данных, возвращаем нули
 //   }
 
-//  String ipAddr = parts[0]; // IP-адрес клиента
-//  String time = parts[3] + " " + parts[4]; // Дата и время запроса
-//  String method = parts[5].substring(1); // Метод запроса (GET, POST и т.д.)
-//  String path = parts[6]; // Путь запроса
-//   String responseCode = parts[8]; // Код HTTP-ответа
-//  String responseSize = parts[9]; // Размер отданных данных в байтах
-//   String referer = parts [10];
-//  String userAgent = parts[11]; // User-Agent
 
 // Поиск User-Agent в скобках
 //  if (userAgent.startsWith("") && userAgent.endsWith("")) {
@@ -197,13 +182,6 @@ public class Main {
 //  }
 //   return new int[]{googlebotCount, yandexbotCount}; // Возвращаем количество запросов от ботов
 //  }
-
-// private static void printStatistics(Statistics statistics) {
-// Выводим результаты статистики
-//   System.out.println("Общий трафик: " + statistics.getTrafficRate() + " байт/час");
-//  System.out.println("Среднее количество посещений в час: " + statistics.getAverageVisitsPerHour());
-//  System.out.println("Среднее количество ошибочных запросов в час: " + statistics.getAverageErrorRequestsPerHour());
-//  System.out.println("Среднее количество посещений одним пользователем: " + statistics.getAverageVisitsPerUser());
 
 
 

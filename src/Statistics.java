@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static javax.xml.bind.DatatypeConverter.parseDate;
+import static sun.net.www.protocol.http.HttpURLConnection.userAgent;
+
 
 public class Statistics {
     long totalTraffic;
@@ -46,42 +49,64 @@ public class Statistics {
 
     }
 
-    public void addTraffic(long bytes) {
-        totalTraffic += bytes;
-    }
-
     // Метод для добавления посещения
-    public void addVisit(String userAgent, String ipAddr, String referrer, int time) {
-        if (!isBot(userAgent)) {
-            // Увеличиваем количество посещений за эту секунду
-            visitsPerSecond.put(time, visitsPerSecond.getOrDefault(time, 0) + 1);
+    public void addVisit(String userAgent, String ipAddr, String referer, int time) {  // Проверка на бота
+        if (userAgent.toLowerCase().contains(botIdentifier)) {
+            return; // Игнорируем ботов
+        }
+        // Проверка на корректность timestamp
+        if (time < 0) {
+            System.err.println("Invalid timestamp: " + time);
+            return; // Игнорируем некорректные временные метки
+        }
+        // Увеличиваем общее количество посещений
+        totalVisits++;
 
-            // Увеличиваем количество посещений для данного пользователя
-            userVisits.put(ipAddr, userVisits.getOrDefault(ipAddr, 0) + 1);
+        // Обновляем статистику по времени
+        visitsPerSecond.put(time, visitsPerSecond.getOrDefault(time, 0) + 1);
 
-            // Добавляем домен реферера
-            if (referrer != null) {
-                String domain = extractDomain(referrer);
+        // Увеличиваем количество посещений для уникального пользователя
+        userVisits.put(ipAddr, userVisits.getOrDefault(ipAddr, 0) + 1);
+
+        // Собираем уникальных пользователей
+        uniqueUsers.add(ipAddr);
+
+// Собираем реферер-домены
+        if (referer != null && !referer.isEmpty()) {
+            String domain = extractDomainFromReferer(referer);
+            if (!domain.isEmpty()) { // Проверка на пустой домен
                 referrerDomains.add(domain);
             }
         }
     }
 
-    // Метод для извлечения домена из URL
-    private String extractDomain(String url) {
+    // Метод для извлечения домена из реферера
+    private String extractDomainFromReferer(String referer) {
+        if (referer == null || referer.isEmpty()) {
+            return ""; // Если реферер пустой или null, возвращаем пустую строку
+        }
+
         try {
-            String domain = url.split("/")[2]; // Извлекаем домен из URL
-            return domain.startsWith("www.") ? domain.substring(4) : domain; // Убираем www.
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return ""; // Если не удалось извлечь домен, возвращаем пустую строку
+            String[] parts = referer.split("/");
+            if (parts.length > 2) {
+                return parts[2]; // Домен находится на третьей позиции после разделения по "/"
+            } else {
+                return ""; // Если нет достаточного количества частей, возвращаем пустую строку
+            }
+        } catch (Exception e) {
+            return ""; // Возвращаем пустую строку в случае ошибки
         }
     }
 
-    // Метод для расчета пиковой посещаемости сайта в секунду
+    // Метод для расчета пиковой посещаемости
     public int getPeakVisitsPerSecond() {
-        return visitsPerSecond.values().stream()
-                .max(Integer::compare)
-                .orElse(0);
+        int peakVisits = 0;
+        for (int visits : visitsPerSecond.values()) {
+            if (visits > peakVisits) {
+                peakVisits = visits;
+            }
+        }
+        return peakVisits;
     }
 
     // Метод для получения списка доменов рефереров
@@ -91,9 +116,13 @@ public class Statistics {
 
     // Метод для расчета максимальной посещаемости одним пользователем
     public int getMaxVisitsByUser() {
-        return userVisits.values().stream()
-                .max(Integer::compare)
-                .orElse(0);
+        int maxVisits = 0;
+        for (int visits : userVisits.values()) {
+            if (visits > maxVisits) {
+                maxVisits = visits;
+            }
+        }
+        return maxVisits;
     }
 
     // Метод для проверки, является ли пользователь ботом
@@ -101,6 +130,9 @@ public class Statistics {
         return userAgent != null && userAgent.toLowerCase().contains(botIdentifier);
     }
 
+    private LocalDateTime parseDate(String dateString) {
+        return LocalDateTime.parse(dateString, java.time.format.DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z"));
+    }
 
     public void addErrorRequest() {
         errorRequests++;
@@ -139,10 +171,10 @@ public class Statistics {
         }
 
         // Обрабатываем операционную систему
-       String os = logEntry.getUserAgent().getOperatingSystem();
+        String os = logEntry.getUserAgent().getOperatingSystem();
         osFrequency.put(os, osFrequency.getOrDefault(os, 0) + 1);
 
-         //Обрабатываем браузер
+        //Обрабатываем браузер
         String browser = logEntry.getUserAgent().getBrowser();
         browserStatistics.put(browser, browserStatistics.getOrDefault(browser, 0) + 1);
     }
@@ -156,6 +188,7 @@ public class Statistics {
 
         return (double) totalTraffic / hoursDifference; // Возвращаем средний трафик
     }
+
     public HashMap<String, Double> getOSDistribution() {
         HashMap<String, Double> osDistribution = new HashMap<>();
         int totalOSCount = osFrequency.values().stream().mapToInt(Integer::intValue).sum(); // Суммируем все значения
@@ -195,14 +228,14 @@ public class Statistics {
         return (double) errorRequests / hoursDifference;
     }
 
-        // Среднее количество посещений на уникальный IP
-        public double averageVisitsPerUniqueUser() {
-            if (uniqueUsers.isEmpty()) {
-                return 0; // Если нет уникальных пользователей, возвращаем 0
-            }
-
-            return (double) totalVisits / uniqueUsers.size();
+    // Среднее количество посещений на уникальный IP
+    public double averageVisitsPerUniqueUser() {
+        if (uniqueUsers.isEmpty()) {
+            return 0; // Если нет уникальных пользователей, возвращаем 0
         }
+
+        return (double) totalVisits / uniqueUsers.size();
+    }
 
     public HashSet<String> getListPages() {
         return listPages; // Возвращаем набор существующих страниц
