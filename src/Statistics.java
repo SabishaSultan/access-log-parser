@@ -81,28 +81,18 @@ public class Statistics {
     }
 
     // Метод для извлечения домена из реферера
-    private String extractDomainFromReferer(String referer) {
-        if (referer == null || referer.isEmpty()) {
-            return ""; // Если реферер пустой или null, возвращаем пустую строку
-        }
-
+    private String extractDomainFromReferer(String url) {
         try {
-            URI uri = new URI(referer);
-            String host = uri.getHost(); // Получаем доменное имя
-
-            if (host != null) {
-                // Убираем " https://" если он есть
-                if (host.startsWith(" https://")) {
-                    return host.substring(4); // Возвращаем домен без " https://"
-                }
-                return host; // Возвращаем домен
-            }
-        } catch (URISyntaxException e) {
-            // Логируем или обрабатываем ошибку, если нужно
-            System.err.println("Invalid referer URL: " + referer);
+            // Удаляем протокол и путь
+            String domain = url.split("/")[2];
+            // Удаляем порт, если есть
+            return domain.split(":")[0];
+        } catch (Exception e) {
+            return null;
         }
-
-        return ""; // Возвращаем пустую строку в случае ошибки
+    }
+    public Set<String> getReferringDomains() {
+        return new HashSet<>(referrerDomains);
     }
 
     // Метод для расчета максимальной посещаемости одним пользователем
@@ -172,6 +162,13 @@ public class Statistics {
         } else if (logEntry.getResponseCode() == 404 || logEntry.getResponseCode() >= 400) {
             nonListPages.add(logEntry.getPath()); // Добавляем URL несуществующей страницы
             errorRequests++; // Увеличиваем количество ошибочных запросов
+        }
+
+        if (logEntry.getReferer() != null && !logEntry.getReferer().isEmpty()) {
+            String domain = extractDomainFromReferer(logEntry.getReferer());
+            if (domain != null) {
+                referrerDomains.add(domain);
+            }
         }
 
         // Обрабатываем операционную систему

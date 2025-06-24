@@ -99,8 +99,7 @@ public class Main {
                 System.out.println("Максимальная посещаемость одним пользователем: " + userVisits);
 
                 // Получаем список доменов рефереров
-                Set<String> referrerDomains = statistics.getReferrerDomains();
-                System.out.println("Сайты, со страниц которых есть ссылки на текущий сайт: " + referrerDomains);
+                System.out.println("Сайты, со страниц которых есть ссылки на текущий сайт: " + statistics.getReferringDomains());
 
 
             } catch (LongLineException ex) {
