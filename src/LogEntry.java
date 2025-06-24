@@ -22,8 +22,8 @@ public class LogEntry {
                 + "- - "                       // Fixed dashes
                 + "\\[([\\w:/]+\\s[+\\-]\\d{4})\\] "  // Date and time - corrected
                 + "\"([A-Z]+) ([^ ]*) HTTP/[^\"]*\" "  // Method and path
-                + "(\\d{3}|-) "                  // Response code
-                + "(\\d+|-) "                    // Size of data
+                + "(\\d{3}) "                  // Response code
+                + "(\\d+) "                    // Size of data
                 + "\"([^\"]*)\" "             // Referrer
                 + "\"([^\"]*)\""              // User-Agent
         );
@@ -33,17 +33,17 @@ public class LogEntry {
             System.err.println("Error parsing log line: " + line);
             throw new IllegalArgumentException("Invalid log format for line: " + line);
         }
+
         this.ipAddr = matcher.group(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.ENGLISH);;
         this.time = LocalDateTime.parse(matcher.group(2), formatter);
         this.method = HttpMethod.valueOf(matcher.group(3));
         this.paths = matcher.group(4);
-        String responseCodeStr = matcher.group(5);
-        this.responseCode = responseCodeStr.equals("-") ? 0 : Integer.parseInt(responseCodeStr); // Устанавливаем 0 по умолчанию
-        String responseSizeStr = matcher.group(6);
-        this.responseSize = responseSizeStr.equals("-") ? 0 : Long.parseLong(responseSizeStr); // Устанавливаем 0 по умолчанию
-        this.referer = matcher.group(7).equals("-") ? "no referrer" : matcher.group(7);;
-        this.agent = new UserAgent(matcher.group(8).equals("-") ? "unknown agent" : matcher.group(8));
+        this.responseCode = Integer.parseInt(matcher.group(5));
+        this.responseSize = Long.parseLong(matcher.group(6));
+        this.referer = matcher.group(7);
+        this.agent = new UserAgent(matcher.group(8));
+
     }
 
     public String getIpAddr() {

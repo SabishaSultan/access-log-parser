@@ -1,4 +1,7 @@
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,6 +29,7 @@ public class Statistics {
     private Map<String, Integer> userVisits; // Количество посещений для каждого пользователя (по IP)
     private Set<String> referrerDomains; // Список доменов рефереров
     private final String botIdentifier = "bot"; // Идентификатор бота в User-Agent
+    private Set<LogEntry> logEntries; // Предполагается, что у вас есть коллекция LogEntry
 
 
     public Statistics() {
@@ -46,56 +50,8 @@ public class Statistics {
         this.visitsPerSecond = new HashMap<>();
         this.userVisits = new HashMap<>();
         this.referrerDomains = new HashSet<>();
+        this.logEntries = new HashSet<>(); // Инициализация коллекции логов
 
-    }
-
-    // Метод для добавления посещения
-    public void addVisit(String userAgent, String ipAddr, String referer, int time) {  // Проверка на бота
-        if (userAgent.toLowerCase().contains(botIdentifier)) {
-            return; // Игнорируем ботов
-        }
-        // Проверка на корректность timestamp
-        if (time < 0) {
-            System.err.println("Invalid timestamp: " + time);
-            return; // Игнорируем некорректные временные метки
-        }
-        // Увеличиваем общее количество посещений
-        totalVisits++;
-
-        // Обновляем статистику по времени
-        visitsPerSecond.put(time, visitsPerSecond.getOrDefault(time, 0) + 1);
-
-        // Увеличиваем количество посещений для уникального пользователя
-        userVisits.put(ipAddr, userVisits.getOrDefault(ipAddr, 0) + 1);
-
-        // Собираем уникальных пользователей
-        uniqueUsers.add(ipAddr);
-
-// Собираем реферер-домены
-        if (referer != null && !referer.isEmpty()) {
-            String domain = extractDomainFromReferer(referer);
-            if (!domain.isEmpty()) { // Проверка на пустой домен
-                referrerDomains.add(domain);
-            }
-        }
-    }
-
-    // Метод для извлечения домена из реферера
-    private String extractDomainFromReferer(String referer) {
-        if (referer == null || referer.isEmpty()) {
-            return ""; // Если реферер пустой или null, возвращаем пустую строку
-        }
-
-        try {
-            String[] parts = referer.split("/");
-            if (parts.length > 2) {
-                return parts[2]; // Домен находится на третьей позиции после разделения по "/"
-            } else {
-                return ""; // Если нет достаточного количества частей, возвращаем пустую строку
-            }
-        } catch (Exception e) {
-            return ""; // Возвращаем пустую строку в случае ошибки
-        }
     }
 
     // Метод для расчета пиковой посещаемости
@@ -111,7 +67,42 @@ public class Statistics {
 
     // Метод для получения списка доменов рефереров
     public Set<String> getReferrerDomains() {
+        Set<String> referrerDomains = new HashSet<>();
+
+        for (LogEntry entry : logEntries) { // Предполагается, что logEntries - это ваша коллекция логов
+            String referer = entry.getReferer();
+            String domain = extractDomainFromReferer(referer);
+            if (!domain.isEmpty()) {
+                referrerDomains.add(domain);
+            }
+        }
+
         return referrerDomains;
+    }
+
+    // Метод для извлечения домена из реферера
+    private String extractDomainFromReferer(String referer) {
+        if (referer == null || referer.isEmpty()) {
+            return ""; // Если реферер пустой или null, возвращаем пустую строку
+        }
+
+        try {
+            URI uri = new URI(referer);
+            String host = uri.getHost(); // Получаем доменное имя
+
+            if (host != null) {
+                // Убираем " https://" если он есть
+                if (host.startsWith(" https://")) {
+                    return host.substring(4); // Возвращаем домен без " https://"
+                }
+                return host; // Возвращаем домен
+            }
+        } catch (URISyntaxException e) {
+            // Логируем или обрабатываем ошибку, если нужно
+            System.err.println("Invalid referer URL: " + referer);
+        }
+
+        return ""; // Возвращаем пустую строку в случае ошибки
     }
 
     // Метод для расчета максимальной посещаемости одним пользователем
@@ -162,9 +153,22 @@ public class Statistics {
         if (logEntry.getResponseCode() == 200) {
             totalVisits++; // Увеличиваем общее количество посещений
             listPages.add(logEntry.getPath());
-            if (!userAgent.isBot()) { // Проверяем, не является ли это ботом
-                uniqueUsers.add(logEntry.getPath()); // Добавляем URL реального пользователя
-            }
+
+                // Добавляем логику для учета посещений
+                String ipAddr = logEntry.getIpAddr();
+                String referer = logEntry.getReferer();
+            LocalDateTime time = logEntry.getDateTime();
+
+            // Преобразуем LocalDateTime в Unix-время (в секундах)
+            int timeInSeconds = (int) time.toEpochSecond(ZoneOffset.UTC);
+
+
+            // Проверка на бота
+                if (!userAgent.isBot()) {
+                    uniqueUsers.add(ipAddr); // Добавляем уникального пользователя
+                    visitsPerSecond.put((timeInSeconds), visitsPerSecond.getOrDefault(timeInSeconds, 0) + 1); // Обновляем статистику по времени
+                    userVisits.put(ipAddr, userVisits.getOrDefault(ipAddr, 0) + 1); // Увеличиваем количество посещений для уникального пользователя
+                }
         } else if (logEntry.getResponseCode() == 404 || logEntry.getResponseCode() >= 400) {
             nonListPages.add(logEntry.getPath()); // Добавляем URL несуществующей страницы
             errorRequests++; // Увеличиваем количество ошибочных запросов

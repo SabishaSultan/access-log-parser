@@ -68,8 +68,6 @@ public class Main {
                     LogEntry entry = new LogEntry(line);
                     statistics.addEntry(entry);
 
-                    // Добавляем записи о посещениях
-                    statistics.addVisit(userAgent, ipAddr, referer, Integer.parseInt(time));
                 }
 
                 System.out.println("Total Traffic: " + statistics.totalTraffic);
